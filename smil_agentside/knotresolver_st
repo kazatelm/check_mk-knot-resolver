@@ -1,0 +1,10 @@
+#!/bin/bash
+# Smil Jeskynka Kazatel v.1.1
+# based on http stats running on HTTP module Knot Resolver
+
+#RUN fetch statistic from your server IP
+RUN=`curl --noproxy "*" http://127.0.0.1:8453/stats | tr ',' '\n' | tr -d '{' | tr -d '}' | tr ':' ' ' |tr -d '"' | sort`
+
+#check_mk marker
+echo "<<<knotresolver_st>>>"
+echo -e "$RUN"

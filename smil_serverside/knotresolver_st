@@ -1,0 +1,47 @@
+#!/usr/bin/python
+## Smil Jeskynka Kazatel v.2.1
+
+knotresolver_st_default_levels = (1000,1500)
+
+
+def inventory_knotresolver_st(info):
+    if len(info):
+        return [( "knotresolver_st" , "knotresolver_st_default_levels")]
+
+def check_knotresolver_st(item, params, info):
+    perfdata = []
+    warn, crit = params
+    status = 0
+    message = ""
+    nosrvfail = 500
+    now = time.time()
+    for line in info:
+        try:
+            name = line[0]
+            value =float(line[1])
+            functionname = "funkce_%s" % (name)
+            rate = get_rate(functionname, now, saveint(value))
+            ratemin = (rate*60)
+            perfdata.append( ( name, ratemin ) )
+            if (name == "answer.total" and ratemin >= crit):
+                status = 2
+                message = "Crit - unexpected trafic answer.total %.2f (warn/crit above %s/%s )" % (ratemin, warn, crit)
+            elif (name == "answer.total" and ratemin >= warn):
+                status = 1
+                message = "Warn - increased trafic answer.total %.2f (warn/crit above %s/%s )" % (ratemin, warn, crit)
+            elif (name == "answer.total" and ratemin < warn):
+                message = "answer.total %.2f (warn/crit above %s/%s )" % (ratemin, warn, crit)
+            if (name == "answer.srvfail" and ratemin >= nosrvfail):
+                status = 2
+                message = "Crit - unexpected answer answer.servfail %s" % (ratemin)
+        except ValueError:
+            raise MKCounterWrapped("Ignoring empty data from agent")
+    return (status, message , perfdata)
+
+# declare the check to Check_MK
+check_info['knotresolver_st'] = {
+    "check_function"      : check_knotresolver_st,
+    "inventory_function"  : inventory_knotresolver_st,
+    "service_description" : "Knot RESOLVER statics",
+    "has_perfdata"        : True,
+}
